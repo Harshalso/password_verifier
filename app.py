@@ -1,4 +1,4 @@
-import re  # Import the 're' module for regular expressions
+import re  
 from flask import Flask, render_template, request
 
 app = Flask(__name__)
@@ -6,37 +6,35 @@ app = Flask(__name__)
 def check_password_strength(password):
     # Check minimum length
     if len(password) < 8:
-        return False
+        return False, "Password must be at least 8 characters long."
 
     # Check for both uppercase and lowercase letters
-    if not re.search(r'[A-Z]', password) or not re.search(r'[a-z]', password):
-        return False
+    if not re.search(r'[A-Z]', password):
+        return False, "Password must contain at least one uppercase letter."
+    if not re.search(r'[a-z]', password):
+        return False, "Password must contain at least one lowercase letter."
 
     # Check for at least one digit
     if not re.search(r'\d', password):
-        return False
+        return False, "Password must contain at least one digit."
 
     # Check for at least one special character
     if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-        return False
+        return False, "Password must contain at least one special character."
 
-    return True
+    return True, "Your password is strong."
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    feedback = ""
+    is_strong = None  # Holds the boolean value (True/False)
+
     if request.method == 'POST':
         password = request.form['password']
-        if check_password_strength(password):
-            feedback = "Your password is strong."
-        else:
-            feedback = ("Your password is weak. Please make sure it meets the following criteria:<br>"
-                        "1. At least 8 characters long<br>"
-                        "2. Contains both uppercase and lowercase letters<br>"
-                        "3. Contains at least one digit (0-9)<br>"
-                        "4. Contains at least one special character (e.g., !, @, #, $, %)")
-        return render_template('index.html', feedback=feedback)
+        is_strong, feedback = check_password_strength(password)
 
-    return render_template('index.html')
+    return render_template('index.html', feedback=feedback, is_strong=is_strong)
 
 if __name__ == "__main__":
     app.run(debug=True)
+
